@@ -1,0 +1,41 @@
+#!/bin/bash
+
+TMP="/tmp/temp.png"
+TMP_OUT="/tmp/output.png"
+RANDOM_DIR="$HOME/.meme_images"
+
+rm $TMP &> /dev/null
+rm $TMP_OUT &> /dev/null
+
+label=$1
+filename=$2
+
+randomFilename() {
+  fileList=()
+  for x in `find $RANDOM_DIR -type f`; do
+    fileList+=($x)
+  done
+
+  number=${#fileList[@]}
+  randomNumber=$(($RANDOM % $number))
+  filename=${fileList[$randomNumber]}
+}
+
+label=$1
+filename=$2
+if [ -z "$filename" ]; then
+  randomFilename
+fi
+
+ident=$(identify -format "%wx%h" $filename)
+size_w=$(echo $ident |cut -d"x" -f1)
+size_y=$(echo $ident |cut -d"x" -f2)
+size="$size_w"x"$size_h"
+params="-pointsize 42 -stroke black -strokewidth 2 -fill white -font \"VerdanaB\" -gravity North"
+
+cmd="convert -background transparent -size $size $params caption:'$label' $TMP"
+eval $cmd
+
+output_cmd="convert $filename $TMP -size $size -composite $TMP_OUT"
+eval $output_cmd
+open $TMP_OUT
